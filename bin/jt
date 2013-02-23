@@ -1,0 +1,6 @@
+#!/usr/bin/env perl
+
+use App::jt;
+
+App::jt->new_with_options->run;
+
