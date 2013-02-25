@@ -5,32 +5,36 @@ use JSON;
 
 option 'ugly' => (
     is => "ro",
-    default => sub { 0 }
+    doc => "Produce uglyfied json output"
 );
 
 option 'pick' => (
     is => "ro",
     format => "i@",
-    autosplit => ".."
+    autosplit => "..",
+    doc => "`--pick n`: Pick n objects randomly. `--pick n..m`: Pick object in this range."
 );
 
 option 'csv' => (
     is => "ro",
-    default => sub { 0 }
+    default => sub { 0 },
+    doc => "Produce csv output for scalar values."
 );
 
 option 'silent' => (
-    is => "ro"
+    is => "ro",
+    doc => "Silent output."
 );
 
-option 'fields' => (
-    is => "ro",
-    format => "s@"
-);
+# option 'fields' => (
+#     is => "ro",
+#     format => "s@"
+# );
 
 option 'map' => (
     is => "ro",
-    format => "s"
+    format => "s",
+    doc => "Run the specified code for each object, with %_ containing the object content."
 );
 
 has data => ( is => "rw" );
