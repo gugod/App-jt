@@ -19,12 +19,16 @@ option 'csv' => (
     default => sub { 0 }
 );
 
+option 'silent' => (
+    is => "ro"
+);
+
 option 'fields' => (
     is => "ro",
     format => "s@"
 );
 
-option 'each' => (
+option 'map' => (
     is => "ro",
     format => "s"
 );
@@ -40,10 +44,11 @@ sub run {
     $self->data(JSON::from_json($text));
     $self->transform;
 
+
     if ($self->csv) {
         $self->output_csv;
     }
-    else {
+    elsif (!$self->silent) {
         $self->output_json;
     }
 }
@@ -73,7 +78,15 @@ sub output_csv {
 sub transform {
     my ($self) = @_;
 
-    if ($self->pick) {
+    if ($self->map) {
+        my $code = $self->map;
+        for my $o (@{ $self->data }) {
+            local %_ = %$o;
+            eval "$code";
+            %$o = %_;
+        }
+    }
+    elsif ($self->pick) {
         my ($m, $n) = @{$self->pick};
         if (defined($m) && defined($n)) {
             @{$self->data} = @{ $self->data }[ $m..$n ];
