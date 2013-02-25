@@ -19,11 +19,6 @@ option 'csv' => (
     default => sub { 0 }
 );
 
-option 'tsv' => (
-    is => "ro",
-    default => sub { 0 }
-);
-
 option 'fields' => (
     is => "ro",
     format => "s@"
@@ -43,11 +38,40 @@ sub run {
 
     my $text = do { local $/; <STDIN> };
     $self->data(JSON::from_json($text));
-    print STDOUT JSON::to_json( $self->transform->data, { pretty => !($self->ugly) });
+    $self->transform;
+
+    if ($self->csv) {
+        $self->output_csv;
+    }
+    else {
+        $self->output_json;
+    }
+}
+
+sub output_json {
+    my ($self) = @_;
+    print STDOUT JSON::to_json( $self->data, { pretty => !($self->ugly) });
+}
+
+sub output_csv {
+    require Text::CSV;
+
+    my ($self) = @_;
+    my $o = $self->data->[0] or return;
+    my @keys = grep { !ref($o->{$_}) } keys %$o;
+
+    my $csv = Text::CSV->new({ binary => 1 });
+    $csv->combine(@keys);
+
+    print STDOUT $csv->string() . "\n";
+    for $o (@{ $self->{data} }) {
+        $csv->combine(@{$o}{@keys});
+        print STDOUT $csv->string() . "\n";
+    }
 }
 
 sub transform {
-    my ($self, $data) = @_;
+    my ($self) = @_;
 
     if ($self->pick) {
         my ($m, $n) = @{$self->pick};
@@ -90,14 +114,10 @@ jt - json transformer
     # filtered by code
     cat cities.json | jt --grep '$_{country} eq "us"' | jt --field name,latlon
 
-    # convert to csv
+    # convert to csv. Only scalar values are chosen.
     cat cities.json | jt --csv
 
-    # .. or tsv (tab-seperated)
-    cat cities.json | jt --tsv
-
     # Run a piece of code on each hash
-    cat orders.json | jt --each 'say "$_{name} sub-total: " . $_{count} * $_{price}'
+    cat orders.json | jt --map 'say "$_{name} sub-total: " . $_{count} * $_{price}'
 
-    cat orders.json | jt --map '...'
     cat orders.json | jt --reduce '...'
