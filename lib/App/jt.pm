@@ -26,10 +26,11 @@ option 'silent' => (
     doc => "Silent output."
 );
 
-# option 'fields' => (
-#     is => "ro",
-#     format => "s@"
-# );
+option 'fields' => (
+    is => "ro",
+    format => "s@",
+    autosplit => ","
+);
 
 option 'map' => (
     is => "ro",
@@ -82,15 +83,7 @@ sub output_csv {
 sub transform {
     my ($self) = @_;
 
-    if ($self->map) {
-        my $code = $self->map;
-        for my $o (@{ $self->data }) {
-            local %_ = %$o;
-            eval "$code";
-            %$o = %_;
-        }
-    }
-    elsif ($self->pick) {
+    if ($self->pick) {
         my ($m, $n) = @{$self->pick};
         if (defined($m) && defined($n)) {
             @{$self->data} = @{ $self->data }[ $m..$n ];
@@ -99,6 +92,22 @@ sub transform {
             my $len = scalar @{ $self->data };
             my @wanted = map { rand($len) } 1..$m;
             @{$self->data} = @{ $self->data }[ @wanted ];
+        }
+    }
+
+    if ($self->map) {
+        my $code = $self->map;
+        for my $o (@{ $self->data }) {
+            local %_ = %$o;
+            eval "$code";
+            %$o = %_;
+        }
+    }
+    elsif (my @fields = @{ $self->fields }) {
+        for my $o (@{ $self->data }) {
+            my %o = ();
+            @o{@fields} = @{$o}{@fields};
+            %$o = %o;
         }
     }
 
