@@ -21,6 +21,18 @@ option 'csv' => (
     doc => "Produce csv output for scalar values."
 );
 
+option 'tsv' => (
+    is => "ro",
+    default => sub { 0 },
+    doc => "Produce csv output for scalar values."
+);
+
+option 'csv' => (
+    is => "ro",
+    default => sub { 0 },
+    doc => "Produce csv output for scalar values."
+);
+
 option 'silent' => (
     is => "ro",
     doc => "Silent output."
@@ -49,9 +61,11 @@ sub run {
     $self->data(JSON::from_json($text));
     $self->transform;
 
-
     if ($self->csv) {
         $self->output_csv;
+    }
+    if ($self->tsv) {
+        $self->output_tsv;
     }
     elsif (!$self->silent) {
         $self->output_json;
@@ -63,14 +77,14 @@ sub output_json {
     print STDOUT JSON::to_json( $self->data, { pretty => !($self->ugly) });
 }
 
-sub output_csv {
+sub output_asv {
     require Text::CSV;
 
-    my ($self) = @_;
+    my ($self, $args) = @_;
     my $o = $self->data->[0] or return;
     my @keys = grep { !ref($o->{$_}) } keys %$o;
 
-    my $csv = Text::CSV->new({ binary => 1 });
+    my $csv = Text::CSV->new({ binary => 1, %$args });
     $csv->combine(@keys);
 
     print STDOUT $csv->string() . "\n";
@@ -78,6 +92,16 @@ sub output_csv {
         $csv->combine(@{$o}{@keys});
         print STDOUT $csv->string() . "\n";
     }
+}
+
+sub output_csv {
+    my ($self) = @_;
+    $self->output_asv({ sep_char => "\t" });
+}
+
+sub output_tsv {
+    my ($self) = @_;
+    $self->output_csv({ sep_char => "\t" });
 }
 
 sub transform {
@@ -103,7 +127,8 @@ sub transform {
             %$o = %_;
         }
     }
-    elsif (my @fields = @{ $self->fields }) {
+    elsif ($self->fields) {
+        my @fields = @{ $self->fields };
         for my $o (@{ $self->data }) {
             my %o = ();
             @o{@fields} = @{$o}{@fields};
@@ -118,7 +143,9 @@ sub transform {
 
 __END__
 
-jt - json transformer
+=head1 jt - json transformer
+
+=head1 SYNOPSIS
 
     # prettyfied
     curl http://example.com/action.json | jt
@@ -128,7 +155,7 @@ jt - json transformer
 
     ## The following commands assemed the input is an array of hashes.
 
-    # take only selected fields 
+    # take only selected fields
     cat cities.json | jt --field name,country,latlon
 
     # randomly pick 10 hashes
@@ -147,3 +174,10 @@ jt - json transformer
     cat orders.json | jt --map 'say "$_{name} sub-total: " . $_{count} * $_{price}'
 
     cat orders.json | jt --reduce '...'
+
+=head2 OUTPUT OPTIONS
+
+The default output format is JSON. If C<--csv> is provided then simple fields
+are chosen and then converted to CSV. If C<--tsv> is provided then it becomes
+tab-separated values. The C<--field> option can be also provided, but array
+or hash values are ignored.
