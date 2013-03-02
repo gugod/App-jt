@@ -58,6 +58,12 @@ option 'fields' => (
     doc => "Filter the input to contain only these fields."
 );
 
+option 'output_flatten' => (
+    is => "ro",
+    default => sub { 0 },
+    doc => "Produce flatten output."
+);
+
 option 'map' => (
     is => "ro",
     format => "s",
@@ -159,8 +165,9 @@ sub transform {
         my $pick_fields_of_hash = sub {
             my $data = shift;
             my $data_ = flatten($data);
+
             for my $k (keys %$data_) {
-                delete $data_->{$k} unless any { m< \A $k ( [:.] | \z ) >x } @fields;
+                delete $data_->{$k} unless any { $k =~ m!(\A|[:\.]) \Q$_\E ([:\.]|\z)!x } @fields;
             }
             return unflatten($data_);
         };
@@ -172,6 +179,18 @@ sub transform {
         }
         elsif (ref($data) eq "HASH") {
             %$data = %{ $pick_fields_of_hash->($data) };
+        }
+    }
+
+    if ($self->output_flatten) {
+        my $data = $self->data;
+        if (ref($data) eq "HASH") {
+            $self->data( flatten( $data ) );
+        }
+        elsif (ref($data) eq "ARRAY") {
+            for my $o (@$data) {
+                %$o = %{ flatten($o) };
+            }
         }
     }
 
@@ -195,8 +214,7 @@ __END__
     # take only selected fields
     cat cities.json | jt --field name,country,latlon
 
-    ## The following commands assemed the input is an array of hashes.
-
+    ## --pick, --grep, -map assumes the input is an array.
     # randomly pick 10 hashes
     cat cities.json | jt --pick 10
 
@@ -212,7 +230,11 @@ __END__
     # Run a piece of code on each hash
     cat orders.json | jt --map 'say "$_{name} sub-total: " . $_{count} * $_{price}'
 
-    cat orders.json | jt --reduce '...'
+=head2 DESCRIPTION
+
+jt assumes the input is some data serialized as JSON, and perform transformation
+based on its parameter. It can be used to deal with various RESTful web service
+api, such as ElasticSearch.
 
 =head2 OUTPUT OPTIONS
 
@@ -223,6 +245,7 @@ tab-separated values.
 =head2 SELECTING FIELDS
 
 The C<--field> option can be used to select only the wanted fields in the output.
+
 The field name notation is based on L<Hash::Flatten> or C<MongoDB>. C<"."> is used
 to delimit sub-fields within a hash, and C<":"> is used to delimit array elements.
 Here's a brief example table that maps such flatten notation with perl expression:
@@ -235,4 +258,14 @@ Here's a brief example table that maps such flatten notation with perl expressio
     | foo.0.bar.4      | $_->{foo}{0}{bar}{4}   |
 
 The C<--fields> option transform the input such that the output contain only
-values of those fields.
+values of those fields. It may contain multilpe values seperated by comma,
+such as:
+
+    --fields title,address,phone
+
+Each specified field name is matched to the flatten notation of full field
+names. So C<"title"> would match any C<"title"> field an any depth in the input.
+
+Then the input is an array of hash, then it applies on the hashes inside, so
+the selection can be simplified.
+
