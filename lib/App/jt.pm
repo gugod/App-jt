@@ -1,14 +1,17 @@
 package App::jt;
 use Moo;
 use MooX::Options;
-use JSON;
+use JSON -support_by_pp;
 use IO::Handle;
+use Hash::Flatten qw(flatten unflatten);
+use List::MoreUtils qw(any);
 
 has output_handle => (
     is => "ro",
     default => sub {
         my $io = IO::Handle->new;
         $io->fdopen( fileno(STDOUT), "w");
+        binmode $io, ":utf8";
         return $io;
     }
 );
@@ -51,7 +54,8 @@ option 'silent' => (
 option 'fields' => (
     is => "ro",
     format => "s@",
-    autosplit => ","
+    autosplit => ",",
+    doc => "Filter the input to contain only these fields."
 );
 
 option 'map' => (
@@ -67,14 +71,17 @@ sub run {
     binmode STDIN => ":utf8";
     binmode STDOUT => ":utf8";
 
+    my $json_decoder = JSON->new;
+    $json_decoder->allow_singlequote(1)->allow_barekey(1);
+
     my $text = do { local $/; <STDIN> };
-    $self->data(JSON::from_json($text));
+    $self->data( $json_decoder->decode($text) );
     $self->transform;
 
     if ($self->csv) {
         $self->output_csv;
     }
-    if ($self->tsv) {
+    elsif ($self->tsv) {
         $self->output_tsv;
     }
     elsif (!$self->silent) {
@@ -84,6 +91,7 @@ sub run {
 
 sub out {
     my ($self, $x) = @_;
+    $x ||= "";
     $x .= "\n" unless substr($x, -1, 1) eq "\n";
     $self->output_handle->print($x);
 }
@@ -98,27 +106,27 @@ sub output_asv {
 
     my ($self, $args) = @_;
     my $o = $self->data->[0] or return;
-    my @keys = grep { !ref($o->{$_}) } keys %$o;
+    my @keys = ($self->fields) ? (@{$self->{fields}}) : ( grep { !ref($o->{$_}) } keys %$o );
 
     my $csv = Text::CSV->new({ binary => 1, %$args });
     $csv->combine(@keys);
 
     $self->out($csv->string);
-
     for $o (@{ $self->{data} }) {
-        $csv->combine(@{$o}{@keys});
+        my $o_ = flatten($o);
+        $csv->combine(@{$o_}{@keys});
         $self->out( $csv->string );
     }
 }
 
 sub output_csv {
     my ($self) = @_;
-    $self->output_asv({ sep_char => "\t" });
+    $self->output_asv({ sep_char => "," });
 }
 
 sub output_tsv {
     my ($self) = @_;
-    $self->output_csv({ sep_char => "\t" });
+    $self->output_asv({ sep_char => "\t" });
 }
 
 sub transform {
@@ -146,10 +154,26 @@ sub transform {
     }
     elsif ($self->fields) {
         my @fields = @{ $self->fields };
-        for my $o (@{ $self->data }) {
-            my %o = ();
-            @o{@fields} = @{$o}{@fields};
-            %$o = %o;
+        my $data = $self->data;
+        if (ref($data) eq "ARRAY") {
+            for my $o (@$data) {
+                my $o_ = flatten($o);
+                my %o = ();
+                @o{@fields} = @{$o_}{@fields};
+                %$o = %{ unflatten(\%o) };
+            }
+        }
+        elsif (ref($data) eq "HASH") {
+            my %is_wanted;
+            @is_wanted{@fields} = ();
+
+            my $data_ = flatten($data);
+
+            for my $k (keys %$data_) {
+                delete $data_->{$k} unless any { index($k, $_) == 0 } @fields;
+            }
+
+            %$data = %{ unflatten($data_) };
         }
     }
 
@@ -196,5 +220,8 @@ __END__
 
 The default output format is JSON. If C<--csv> is provided then simple fields
 are chosen and then converted to CSV. If C<--tsv> is provided then it becomes
-tab-separated values. The C<--field> option can be also provided, but array
-or hash values are ignored.
+tab-separated values.
+
+=head2 SELECTING FIELDS
+
+The C<--field> option can 
