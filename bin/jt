@@ -1,4 +1,6 @@
 #!/usr/bin/env perl
+# PODNAME: jt
+# ABSTRACT: JSON Transformer
 
 if (-t STDIN) {
     require Pod::Usage;
@@ -7,10 +9,6 @@ if (-t STDIN) {
 
 use App::jt;
 App::jt->new_with_options->run;
-
-=head1 NAME
-
-jt - JSON transformer
 
 =head1 SYNOPSIS
 
