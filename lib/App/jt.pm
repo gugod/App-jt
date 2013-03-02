@@ -1,10 +1,14 @@
 package App::jt;
+# ABSTRACT: JSON transformer
+
+use 5.010;
 use Moo;
 use MooX::Options;
 use JSON -support_by_pp;
 use IO::Handle;
 use Hash::Flatten qw(flatten unflatten);
 use List::MoreUtils qw(any);
+use Pod::Usage qw(pod2usage);
 
 has output_handle => (
     is => "ro",
@@ -75,7 +79,6 @@ has data => ( is => "rw" );
 sub run {
     my ($self) = @_;
     binmode STDIN => ":utf8";
-    binmode STDOUT => ":utf8";
 
     my $json_decoder = JSON->new;
     $json_decoder->allow_singlequote(1)->allow_barekey(1);
@@ -198,74 +201,4 @@ sub transform {
 }
 
 1;
-
-__END__
-
-=head1 jt - json transformer
-
-=head1 SYNOPSIS
-
-    # prettyfied
-    curl http://example.com/action.json | jt
-
-    # uglified
-    cat random.json | jt --ugly > random.min.json
-
-    # take only selected fields
-    cat cities.json | jt --field name,country,latlon
-
-    ## --pick, --grep, -map assumes the input is an array.
-    # randomly pick 10 hashes
-    cat cities.json | jt --pick 10
-
-    # pick 10 hashes from position 100, and uglified the output
-    cat cities.json | jt --pick 100..109 --ugly
-
-    # filtered by code
-    cat cities.json | jt --grep '$_{country} eq "us"' | jt --field name,latlon
-
-    # convert to csv. Only scalar values are chosen.
-    cat cities.json | jt --csv
-
-    # Run a piece of code on each hash
-    cat orders.json | jt --map 'say "$_{name} sub-total: " . $_{count} * $_{price}'
-
-=head2 DESCRIPTION
-
-jt assumes the input is some data serialized as JSON, and perform transformation
-based on its parameter. It can be used to deal with various RESTful web service
-api, such as ElasticSearch.
-
-=head2 OUTPUT OPTIONS
-
-The default output format is JSON. If C<--csv> is provided then simple fields
-are chosen and then converted to CSV. If C<--tsv> is provided then it becomes
-tab-separated values.
-
-=head2 SELECTING FIELDS
-
-The C<--field> option can be used to select only the wanted fields in the output.
-
-The field name notation is based on L<Hash::Flatten> or C<MongoDB>. C<"."> is used
-to delimit sub-fields within a hash, and C<":"> is used to delimit array elements.
-Here's a brief example table that maps such flatten notation with perl expression:
-
-    | flatten notation | perl expression        |
-    |                  |                        |
-    | foo.bar          | $_->{foo}{bar}         |
-    | foo:0            | $_->{foo}[0]           |
-    | foo.bar:3.baz    | $_->{foo}{bar}[3]{baz} |
-    | foo.0.bar.4      | $_->{foo}{0}{bar}{4}   |
-
-The C<--fields> option transform the input such that the output contain only
-values of those fields. It may contain multilpe values seperated by comma,
-such as:
-
-    --fields title,address,phone
-
-Each specified field name is matched to the flatten notation of full field
-names. So C<"title"> would match any C<"title"> field an any depth in the input.
-
-Then the input is an array of hash, then it applies on the hashes inside, so
-the selection can be simplified.
 
