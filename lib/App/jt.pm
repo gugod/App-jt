@@ -155,25 +155,23 @@ sub transform {
     elsif ($self->fields) {
         my @fields = @{ $self->fields };
         my $data = $self->data;
+
+        my $pick_fields_of_hash = sub {
+            my $data = shift;
+            my $data_ = flatten($data);
+            for my $k (keys %$data_) {
+                delete $data_->{$k} unless any { m< \A $k ( [:.] | \z ) >x } @fields;
+            }
+            return unflatten($data_);
+        };
+
         if (ref($data) eq "ARRAY") {
             for my $o (@$data) {
-                my $o_ = flatten($o);
-                my %o = ();
-                @o{@fields} = @{$o_}{@fields};
-                %$o = %{ unflatten(\%o) };
+                %$o = %{ $pick_fields_of_hash->($o) };
             }
         }
         elsif (ref($data) eq "HASH") {
-            my %is_wanted;
-            @is_wanted{@fields} = ();
-
-            my $data_ = flatten($data);
-
-            for my $k (keys %$data_) {
-                delete $data_->{$k} unless any { index($k, $_) == 0 } @fields;
-            }
-
-            %$data = %{ unflatten($data_) };
+            %$data = %{ $pick_fields_of_hash->($data) };
         }
     }
 
@@ -194,10 +192,10 @@ __END__
     # uglified
     cat random.json | jt --ugly > random.min.json
 
-    ## The following commands assemed the input is an array of hashes.
-
     # take only selected fields
     cat cities.json | jt --field name,country,latlon
+
+    ## The following commands assemed the input is an array of hashes.
 
     # randomly pick 10 hashes
     cat cities.json | jt --pick 10
@@ -224,4 +222,17 @@ tab-separated values.
 
 =head2 SELECTING FIELDS
 
-The C<--field> option can 
+The C<--field> option can be used to select only the wanted fields in the output.
+The field name notation is based on L<Hash::Flatten> or C<MongoDB>. C<"."> is used
+to delimit sub-fields within a hash, and C<":"> is used to delimit array elements.
+Here's a brief example table that maps such flatten notation with perl expression:
+
+    | flatten notation | perl expression        |
+    |                  |                        |
+    | foo.bar          | $_->{foo}{bar}         |
+    | foo:0            | $_->{foo}[0]           |
+    | foo.bar:3.baz    | $_->{foo}{bar}[3]{baz} |
+    | foo.0.bar.4      | $_->{foo}{0}{bar}{4}   |
+
+The C<--fields> option transform the input such that the output contain only
+values of those fields.
