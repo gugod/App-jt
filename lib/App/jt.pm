@@ -2,6 +2,16 @@ package App::jt;
 use Moo;
 use MooX::Options;
 use JSON;
+use IO::Handle;
+
+has output_handle => (
+    is => "ro",
+    default => sub {
+        my $io = IO::Handle->new;
+        $io->fdopen( fileno(STDOUT), "w");
+        return $io;
+    }
+);
 
 option 'ugly' => (
     is => "ro",
@@ -72,9 +82,15 @@ sub run {
     }
 }
 
+sub out {
+    my ($self, $x) = @_;
+    $x .= "\n" unless substr($x, -1, 1) eq "\n";
+    $self->output_handle->print($x);
+}
+
 sub output_json {
     my ($self) = @_;
-    print STDOUT JSON::to_json( $self->data, { pretty => !($self->ugly) });
+    $self->out( JSON::to_json( $self->data, { pretty => !($self->ugly) }) );
 }
 
 sub output_asv {
@@ -87,10 +103,11 @@ sub output_asv {
     my $csv = Text::CSV->new({ binary => 1, %$args });
     $csv->combine(@keys);
 
-    print STDOUT $csv->string() . "\n";
+    $self->out($csv->string);
+
     for $o (@{ $self->{data} }) {
         $csv->combine(@{$o}{@keys});
-        print STDOUT $csv->string() . "\n";
+        $self->out( $csv->string );
     }
 }
 
