@@ -4,7 +4,7 @@ package App::jt;
 use 5.010;
 use Moo;
 use MooX::Options;
-use JSON -support_by_pp;
+use JSON::PP;
 use IO::Handle;
 use Hash::Flatten qw(flatten unflatten);
 use List::MoreUtils qw(any);
@@ -88,7 +88,7 @@ sub run {
     my ($self) = @_;
     binmode STDIN => ":utf8";
 
-    my $json_decoder = JSON->new;
+    my $json_decoder = JSON::PP->new;
     $json_decoder->allow_singlequote(1)->allow_barekey(1);
 
     my $text = do { local $/; <STDIN> };
@@ -115,7 +115,9 @@ sub out {
 
 sub output_json {
     my ($self) = @_;
-    $self->out( JSON::to_json( $self->data, { pretty => !($self->ugly) }) );
+    my $json_encoder = JSON::PP->new;
+    $json_encoder->pretty unless $self->ugly;
+    $self->out( $json_encoder->encode($self->data) );
 }
 
 sub output_asv {
