@@ -106,6 +106,13 @@ sub run {
     }
 }
 
+sub data_as_arrayref {
+    my ($self) = @_;
+    my $data = $self->data;
+    return $data if ref($data) eq "ARRAY";
+    return [ $data ];
+}
+
 sub out {
     my ($self, $x) = @_;
     $x ||= "";
@@ -124,14 +131,15 @@ sub output_asv {
     require Text::CSV;
 
     my ($self, $args) = @_;
-    my $o = $self->data->[0] or return;
+    my $data = $self->data_as_arrayref;
+    my $o = $data->[0] or return;
     my @keys = ($self->fields) ? (@{$self->{fields}}) : ( grep { !ref($o->{$_}) } keys %$o );
 
     my $csv = Text::CSV->new({ binary => 1, %$args });
     $csv->combine(@keys);
 
     $self->out($csv->string);
-    for $o (@{ $self->{data} }) {
+    for $o (@$data) {
         my $o_ = flatten($o);
         $csv->combine(@{$o_}{@keys});
         $self->out( $csv->string );
@@ -182,7 +190,6 @@ sub transform {
     elsif ($self->fields) {
         my @fields = @{ $self->fields };
         my $data = $self->data;
-
         my $pick_fields_of_hash = sub {
             my $data = shift;
             my $data_ = flatten($data);
