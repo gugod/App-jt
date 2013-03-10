@@ -8,7 +8,6 @@ use JSON -support_by_pp;
 use IO::Handle;
 use Hash::Flatten qw(flatten unflatten);
 use List::MoreUtils qw(any);
-use Pod::Usage qw(pod2usage);
 
 has output_handle => (
     is => "ro",
@@ -74,7 +73,16 @@ option 'map' => (
     doc => "Run the specified code for each object, with %_ containing the object content."
 );
 
-has data => ( is => "rw" );
+option 'json_path' => (
+    is => "ro",
+    doc => "A JSONPath string for filtering document.",
+    format => "s",
+);
+
+has data => (
+    is => "rw",
+    doc => "The data that keeps transforming."
+);
 
 sub run {
     my ($self) = @_;
@@ -160,6 +168,14 @@ sub transform {
             eval "$code";
             %$o = %_;
         }
+    }
+    elsif ($self->json_path) {
+        require JSON::Path;
+
+        my $jpath = JSON::Path->new($self->json_path);
+        my @values = $jpath->values($self->data);
+
+        $self->data( \@values );
     }
     elsif ($self->fields) {
         my @fields = @{ $self->fields };
