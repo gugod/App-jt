@@ -18,6 +18,15 @@ has output_handle => (
         return $io;
     }
 );
+has input_handle => (
+    is => "ro",
+    default => sub {
+        my $io = IO::Handle->new;
+        $io->fdopen( fileno(STDIN), "r");
+        binmode $io, ":utf8";
+        return $io;
+    }
+);
 
 option 'ugly' => (
     is => "ro",
@@ -86,12 +95,11 @@ has data => (
 
 sub run {
     my ($self) = @_;
-    binmode STDIN => ":utf8";
 
     my $json_decoder = JSON::PP->new;
     $json_decoder->allow_singlequote(1)->allow_barekey(1);
-
-    my $text = do { local $/; <STDIN> };
+    my $IN   = $self->input_handle;
+    my $text = do { local $/; <$IN> };
     $self->data( $json_decoder->decode($text) );
     $self->transform;
 
