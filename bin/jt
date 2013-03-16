@@ -79,3 +79,14 @@ names. So C<"title"> would match any C<"title"> field an any depth in the input.
 
 Then the input is an array of hash, then it applies on the hashes inside, so
 the selection can be simplified.
+
+=head1 SELECTING BY JSON PATH
+
+JSONPath is a more comprehensive way to specify the elements within a JSON structure.
+See the full description of JSONPath at L<http://goessner.net/articles/JsonPath/>
+
+To specify a JSONPath selector, use C<--json-path> option. Here are some simple
+examples:
+
+    cat store.json | jt --json-path '$..author'   # Get all book authors
+    cat store.json | jt --json-path '$..book[:2]' # The first 2 books.
