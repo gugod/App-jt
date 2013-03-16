@@ -30,6 +30,13 @@
             "title" : "The Lord of the Rings",
             "author" : "J. R. R. Tolkien",
             "category" : "fiction"
+         },
+         {
+            "price" : 13.95,
+            "isbn" : "0-547-92822-X",
+            "title" : "The Hobbit",
+            "author" : "J. R. R. Tolkien",
+            "category" : "fiction"
          }
       ]
    }

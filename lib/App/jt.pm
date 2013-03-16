@@ -189,9 +189,21 @@ sub transform {
     if ($self->map) {
         my $code = $self->map;
         for my $o (@{ $self->data }) {
-            local %_ = %$o;
-            eval "$code";
-            %$o = %_;
+            local $_ = $o;
+            if (not ref $o) {
+                eval "$code";
+                $o = $_;
+            }
+            elsif (ref($o) eq 'ARRAY') {
+                local @_ = @$o;
+                eval "$code";
+                @$o = @_;
+            }
+            elsif (ref($o) eq 'HASH') {
+                local %_ = %$o;
+                eval "$code";
+                %$o = %_;
+            }
         }
     }
     if ($self->grep) {

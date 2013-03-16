@@ -90,3 +90,6 @@ examples:
 
     cat store.json | jt --json-path '$..author'   # Get all book authors
     cat store.json | jt --json-path '$..book[:2]' # The first 2 books.
+
+    # print unique authors
+    cat store.json | bin/jt --json-path '$..author' | bin/jt --silent --map 'say $_' | sort -u
