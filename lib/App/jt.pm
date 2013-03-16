@@ -18,6 +18,7 @@ has output_handle => (
         return $io;
     }
 );
+
 has input_handle => (
     is => "ro",
     default => sub {
@@ -80,6 +81,12 @@ option 'map' => (
     is => "ro",
     format => "s",
     doc => "Run the specified code for each object, with %_ containing the object content."
+);
+
+option 'grep' => (
+    is => "ro",
+    format => "s",
+    doc => "Filter the objects by given code. %_ containing the object content."
 );
 
 option 'json_path' => (
@@ -187,6 +194,19 @@ sub transform {
             %$o = %_;
         }
     }
+    if ($self->grep) {
+        my $code = $self->grep;
+        my @objs;
+        for my $o (@{ $self->data }) {
+            local %_ = %$o;
+            my $wanted = eval "$code";
+            if ($wanted) {
+                push @objs, $o;
+            }
+            $self->data(\@objs);
+        }
+    }
+
     elsif ($self->json_path) {
         require JSON::Path;
 
