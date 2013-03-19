@@ -58,4 +58,17 @@ OUT
 
 };
 
+subtest "silent" => sub {
+    my $in  = q!{a:41,"b":42}!;
+    my $out = "";
+
+    App::jt->new(
+        input_handle  => IO::String->new($in),
+        output_handle => IO::String->new($out),
+        silent => 1
+    )->run;
+
+    is $out, "";
+};
+
 done_testing;
