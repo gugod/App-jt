@@ -20,7 +20,7 @@ script:
 notifications:
    irc:
       channels:
-         - ""irc:irc.freenode.org#chupei.pm""
+         - "irc:irc.freenode.org#chupei.pm"
       template:
          - "%{branch}#%{build_number} by %{author}: %{message} (%{build_url})"
       on_success: change
