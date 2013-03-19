@@ -53,12 +53,6 @@ option 'tsv' => (
     doc => "Produce csv output for scalar values."
 );
 
-option 'csv' => (
-    is => "ro",
-    default => sub { 0 },
-    doc => "Produce csv output for scalar values."
-);
-
 option 'silent' => (
     is => "ro",
     doc => "Silent output."
