@@ -33,7 +33,7 @@ b,a
 44,43
 CSV
 
-    ok ($out eq $out1) || ($out eq $out2)
+    ok( ($out eq $out1) || ($out eq $out2) );
 };
 
 subtest "tsv" => sub {
