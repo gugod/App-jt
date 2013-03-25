@@ -21,11 +21,19 @@ IN
         csv => 1
     )->run;
 
-    is $out, <<CSV
+    my $out1 = <<CSV;
 a,b
 41,42
 43,44
 CSV
+
+    my $out2 = <<CSV;
+b,a
+42,41
+44,43
+CSV
+
+    ok ($out eq $out1) || ($out eq $out2)
 };
 
 subtest "tsv" => sub {
@@ -43,11 +51,19 @@ IN
         tsv => 1
     )->run;
 
-    is $out, <<CSV
+    my $r = $out eq <<CSV;
+b	a
+42	41
+44	43
+CSV
+
+    $r ||= $out eq <<CSV;
 a	b
 41	42
 43	44
 CSV
+
+    ok $r
 };
 
 done_testing;
