@@ -6,26 +6,8 @@ use Test::More;
 use IO::String;
 use App::jt;
 
-subtest "--ugly" => sub {
-    my $in  = <<'IN';
-{
-     "a" : 41,
-     "b" : 42
-}
-IN
-    my $out = "";
-
-    App::jt->new(
-        input_handle  => IO::String->new($in),
-        output_handle => IO::String->new($out),
-        "ugly"        => 1
-    )->run;
-
-    is $out, qq<{"a":41,"b":42}\n>;
-};
-
 subtest "default behaviour (prettify)" => sub {
-    my $in  = q!{a:41,"b":42}!;
+    my $in  = q![1,3,5,7,9]!;
     my $out = "";
 
     App::jt->new(
@@ -33,17 +15,20 @@ subtest "default behaviour (prettify)" => sub {
         output_handle => IO::String->new($out)
     )->run;
 
-    is $out, <<'OUT';
-{
-   "a" : 41,
-   "b" : 42
-}
+    is $out,<<OUT;
+[
+   1,
+   3,
+   5,
+   7,
+   9
+]
 OUT
 
 };
 
 subtest "uglify" => sub {
-    my $in  = q!{a:41,"b":42}!;
+    my $in  = q![1, 3, 5, 7, 9]!;
     my $out = "";
 
     App::jt->new(
@@ -52,10 +37,8 @@ subtest "uglify" => sub {
         ugly => 1
     )->run;
 
-    is $out, <<'OUT';
-{"a":41,"b":42}
-OUT
-
+    unlike $out, qr/ /, "no space in this output";
+    is $out, qq![1,3,5,7,9]\n!;
 };
 
 subtest "silent" => sub {
