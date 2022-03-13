@@ -10,5 +10,6 @@ requires "Pod::Usage";
 requires "Text::CSV";
 
 on "test" => sub {
+   requires "App::Yath";
    requires "Test::More";
 };
