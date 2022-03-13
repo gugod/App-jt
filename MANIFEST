@@ -1,0 +1,17 @@
+.github/FUNDING.yml
+.github/workflows/lint.yml
+.github/workflows/test.yml
+Build.PL
+LICENSE
+MANIFEST
+META.json
+META.yml
+README
+cpanfile
+examples/cities.json
+examples/store.json
+lib/App/jt.pm
+metamerge.json
+script/jt
+t/basic.t
+t/csv.t

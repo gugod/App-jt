@@ -1,0 +1,38 @@
+---
+abstract: 'JSON transformer'
+author:
+  - 'Kang-min Liu <gugod@gugod.org>'
+build_requires:
+  Test::More: '0'
+configure_requires:
+  Module::Build::Tiny: '0.034'
+dynamic_config: 0
+generated_by: 'App::ModuleBuildTiny version 0.029, CPAN::Meta::Converter version 2.150010'
+license: mit
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: App-jt
+provides:
+  App::jt:
+    file: lib/App/jt.pm
+    version: '0.43'
+requires:
+  Hash::Flatten: '0'
+  IO::Handle: '0'
+  IO::String: '0'
+  JSON::PP: '0'
+  JSON::Path: '0'
+  List::MoreUtils: '0'
+  Moo: '0'
+  MooX::Options: '0'
+  Pod::Usage: '0'
+  Text::CSV: '0'
+resources:
+  bugtracker: https://github.com/gugod/App-jt/issues
+  homepage: https://github.com/gugod/App-jt
+  repository: git://github.com/gugod/App-jt.git
+version: '0.43'
+x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
+x_spdx_expression: MIT
+x_static_install: '1'

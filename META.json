@@ -1,0 +1,69 @@
+{
+   "abstract" : "JSON transformer",
+   "author" : [
+      "Kang-min Liu <gugod@gugod.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "App::ModuleBuildTiny version 0.029",
+   "license" : [
+      "mit"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "App-jt",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0.034"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "App::ModuleBuildTiny" : "0.029"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Hash::Flatten" : "0",
+            "IO::Handle" : "0",
+            "IO::String" : "0",
+            "JSON::PP" : "0",
+            "JSON::Path" : "0",
+            "List::MoreUtils" : "0",
+            "Moo" : "0",
+            "MooX::Options" : "0",
+            "Pod::Usage" : "0",
+            "Text::CSV" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::More" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "App::jt" : {
+         "file" : "lib/App/jt.pm",
+         "version" : "0.43"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/gugod/App-jt/issues"
+      },
+      "homepage" : "https://github.com/gugod/App-jt",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/gugod/App-jt.git",
+         "web" : "https://github.com/gugod/App-jt"
+      }
+   },
+   "version" : "0.43",
+   "x_serialization_backend" : "JSON::PP version 4.04",
+   "x_spdx_expression" : "MIT",
+   "x_static_install" : "1"
+}

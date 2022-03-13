@@ -1,0 +1,13 @@
+{
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/gugod/App-jt/issues"
+      },
+      "homepage" : "https://github.com/gugod/App-jt",
+      "repository" : {
+         "url" : "git://github.com/gugod/App-jt.git",
+         "web" : "https://github.com/gugod/App-jt"
+      }
+   },
+    "x_static_install": true
+}
